@@ -20,36 +20,31 @@ public class HostConsole {
 
 		IAudioServerApi audioServer = AudioServerApi.getInstance();
 
-		audioServer.CreateConnection(url, authCode, name);
+		audioServer.createConnection(url, authCode, name);
 
-		audioServer.OnClientConnect((connectionId, uuid) -> {
-			System.out.println("client connected! connection ID: '" + connectionId + "', uuid: '" + uuid + "'");
+		audioServer.onClientConnect((playerClient) -> {
+			System.out.println("client connected! " + playerClient);
 		});
 
-		audioServer.OnClientDisconnect((connectionId, uuid) -> {
-			System.out.println("client disconnected! connection ID: '" + connectionId + "', uuid: '" + uuid + "'");
+		audioServer.onClientDisconnect((playerClient) -> {
+			System.out.println("client disconnected! " + playerClient);
 		});
 
-		audioServer.OnHostConnect((name) -> {
+		audioServer.onHostConnect((name) -> {
 			System.out.println("host connected! name: '" + name + "'");
 		});
 
-		audioServer.OnHostDisconnect((name) -> {
+		audioServer.onHostDisconnect((name) -> {
 			System.out.println("host disconnected! name: '" + name + "'");
 		});
 
-		audioServer.OnCreateChannel((name, description, singleAudio) -> {
-			System.out.println("channel created! name: '" + name + "', description: '" + description + "', singleAudio: '" + singleAudio + "'");
+		audioServer.onCreateChannel((channel) -> {
+			System.out.println("channel created! " + channel);
 		});
 
-		audioServer.OnRemoveChannel((name) -> {
+		audioServer.onRemoveChannel((name) -> {
 			System.out.println("channel removed! name: '" + name + "'");
 		});
-
-		audioServer.OnPong(() -> {
-			System.out.println("pong!");
-		});
-		
 
 		System.out.println("Connected as a host! name: " + name);
 
@@ -72,7 +67,7 @@ public class HostConsole {
 							break;
 						}
 						
-						audioServer.CreateChannel(input[1], input[2], Boolean.parseBoolean(input[3]));
+						audioServer.createChannel(input[1], input[2], Boolean.parseBoolean(input[3]));
 						System.out.println("Creating channel...");
 						break;
 						
@@ -82,7 +77,7 @@ public class HostConsole {
 							break;
 						}
 	
-						audioServer.RemoveChannel(input[1]);
+						audioServer.removeChannel(input[1]);
 						System.out.println("Removing channel...");
 						break;
 	
@@ -96,7 +91,7 @@ public class HostConsole {
 						double startTime = input.length >= 6 ? Double.parseDouble(input[5]) : 0;
 						boolean looping = input.length >= 7 ? Boolean.parseBoolean(input[6]) : false;
 						
-						audioServer.PlayAudio(Arrays.asList(input[1]), input[2], input[3], input[4], startTime, looping);
+						audioServer.playAudio(Arrays.asList(input[1]), input[2], input[3], input[4], startTime, looping);
 						System.out.println("playing audio...");
 						break;
 						
@@ -107,7 +102,7 @@ public class HostConsole {
 							break;
 						}
 						
-						audioServer.StopAudio(Arrays.asList(input[1]), input[2], input[3]);
+						audioServer.stopAudio(Arrays.asList(input[1]), input[2], input[3]);
 						System.out.println("stopping audio...");
 						break;
 						
@@ -117,7 +112,7 @@ public class HostConsole {
 							break;
 						}
 	
-						audioServer.StopChannel(Arrays.asList(input[1]), Arrays.asList(input[2]));
+						audioServer.stopChannel(Arrays.asList(input[1]), Arrays.asList(input[2]));
 						System.out.println("stopping all audio in channel...");
 						break;
 	
@@ -128,13 +123,30 @@ public class HostConsole {
 							break;
 						}
 	
-						audioServer.StopAllAudio(Arrays.asList(input[1]));
+						audioServer.stopAllAudio(Arrays.asList(input[1]));
 						System.out.println("stopping all audio...");
 						break;
-						
+
+					case "getchannels":
+						System.out.println("getting channels...");
+						audioServer.getChannels(channels -> System.out.println(channels));
+						break;
+
+					case "getplayers":
+					case "getplayerclients":
+						System.out.println("getting player clients...");
+						audioServer.getPlayerClients(playerClients -> System.out.println(playerClients));
+						break;
+
+					case "gethosts":
+					case "gethostclients":
+						System.out.println("getting host clients...");
+						audioServer.getHostClients(hostClients -> System.out.println(hostClients));
+						break;
+
 					case "ping":
-						audioServer.Ping();
 						System.out.println("pinging...");
+						audioServer.ping(callback -> System.out.println(callback));
 						break;
 	
 					default:

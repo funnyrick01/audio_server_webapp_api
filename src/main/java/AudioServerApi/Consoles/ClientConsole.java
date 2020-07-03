@@ -14,12 +14,12 @@ public class ClientConsole {
 
 		audioServer.CreateClientConnection(url, uuid);
 		
-		audioServer.OnCreateChannel((name, desctiption, singleAudio) -> {
-			System.out.println("[OnCreateChannel] " + String.join(", ", name, desctiption, singleAudio.toString()));
+		audioServer.onCreateChannel((channel) -> {
+			System.out.println("[OnCreateChannel] " + channel);
 		});
 		
-		audioServer.OnRemoveChannel((name) -> {
-			System.out.println("[OnRemoveChannel] " + String.join(", ", name));
+		audioServer.onRemoveChannel((channel) -> {
+			System.out.println("[OnRemoveChannel] " + channel);
 		});
 		
 		audioServer.OnPlayAudio((channel, name, fileLocation, startTime, looping) -> {
