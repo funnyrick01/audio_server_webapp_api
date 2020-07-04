@@ -1,16 +1,13 @@
 package AudioServerApi;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import AudioServerApi.models.Channel;
 import AudioServerApi.models.HostClient;
 import AudioServerApi.models.PlayerClient;
-import LiveMapApi.PlayerLocation;
-import com.microsoft.signalr.Action;
 import com.microsoft.signalr.Action1;
-import com.microsoft.signalr.Action2;
-import com.microsoft.signalr.Action3;
-import com.microsoft.signalr.Action5;
 import com.microsoft.signalr.HubConnection;
 import com.microsoft.signalr.HubConnectionBuilder;
 import com.microsoft.signalr.Subscription;
@@ -25,37 +22,59 @@ public class AudioServerApi implements IAudioServerApi {
 	}
 	
 	private HubConnection connection;
-	
+
+	private final List<Channel> channels = new ArrayList<>();
+	private final List<PlayerClient> playerClients = new ArrayList<>();
+	private final List<HostClient> hostClients = new ArrayList<>();
+
 	public void createConnection(String url, String authCode, String name) {
 		connection = HubConnectionBuilder.create(url + "?authCode=" + authCode + "&name=" + name).build();
 		
 		connection.start().blockingAwait();
-	}
-	
-	public void CreateClientConnection(String url, String uuid) {
-		connection = HubConnectionBuilder.create(url + "?uuid=" + uuid).build();
-		
-		connection.start().blockingAwait();
+
+		getRemoteChannels(channels -> Collections.addAll(this.channels, channels));
+		getRemotePlayerClients(playerClients -> Collections.addAll(this.playerClients, playerClients));
+		getRemoteHostClients(hostClients -> Collections.addAll(this.hostClients, hostClients));
 	}
 
 	public void stopConnection() {
 		connection.stop().blockingAwait();
+
+		channels.clear();
+		playerClients.clear();
+		hostClients.clear();
 	}
 	
 	public Subscription onClientConnect(Action1<PlayerClient> action) {
-		return connection.on("ClientConnect", action, PlayerClient.class);
+		return connection.on("ClientConnect", playerClient -> {
+			this.playerClients.add(playerClient);
+			action.invoke(playerClient);
+		}, PlayerClient.class);
 	}
 	
 	public Subscription onClientDisconnect(Action1<PlayerClient> action) {
-		return connection.on("ClientDisconnect", action, PlayerClient.class);
+		return connection.on("ClientDisconnect", playerClient -> {
+			int index = this.playerClients.indexOf(playerClient);
+			if (index >= 0)
+				this.playerClients.remove(index);
+			action.invoke(playerClient);
+		}, PlayerClient.class);
 	}
 	
 	public Subscription onHostConnect(Action1<HostClient> action) {
-		return connection.on("HostConnect", action, HostClient.class);
+		return connection.on("HostConnect", hostClient -> {
+			this.hostClients.add(hostClient);
+			action.invoke(hostClient);
+		}, HostClient.class);
 	}
 	
 	public Subscription onHostDisconnect(Action1<HostClient> action) {
-		return connection.on("HostDisconnect", action, HostClient.class);
+		return connection.on("HostDisconnect", hostClients -> {
+			int index = this.hostClients.indexOf(hostClients);
+			if (index >= 0)
+				this.hostClients.remove(index);
+			action.invoke(hostClients);
+		}, HostClient.class);
 	}
 	
 	
@@ -64,7 +83,10 @@ public class AudioServerApi implements IAudioServerApi {
 	}
 	
 	public Subscription onCreateChannel(Action1<Channel> action) {
-		return connection.on("CreateChannel", action, Channel.class);
+		return connection.on("CreateChannel", channel -> {
+			this.channels.add(channel);
+			action.invoke(channel);
+		}, Channel.class);
 	}
 	
 	public void removeChannel(String name) {
@@ -72,7 +94,12 @@ public class AudioServerApi implements IAudioServerApi {
 	}
 	
 	public Subscription onRemoveChannel(Action1<Channel> action) {
-		return connection.on("RemoveChannel", action, Channel.class);
+		return connection.on("RemoveChannel", channel -> {
+			int index = this.channels.indexOf(channel);
+			if (index >= 0)
+				this.channels.remove(index);
+			action.invoke(channel);
+		}, Channel.class);
 	}
 	
 	public void playAudio(List<String> uuids, String channel, String name, String fileLocation, double startTime, boolean looping) {
@@ -83,7 +110,7 @@ public class AudioServerApi implements IAudioServerApi {
 		connection.send("StopAudio", uuids, channel, name);
 	}
 
-	public void stopChannel(List<String> uuids, List<String> channels) {
+	public void stopChannels(List<String> uuids, List<String> channels) {
 		connection.send("StopChannel", uuids, channels);
 	}
 
@@ -91,40 +118,35 @@ public class AudioServerApi implements IAudioServerApi {
 		connection.send("StopAllAudio", uuids);
 	}
 
-	public void getChannels(Consumer<List<Channel>> callback) {
-		connection.invoke((Class<List<Channel>>)(Class<?>)List.class, "GetChannels").subscribe(callback);
-	}
-
-	public void getPlayerClients(Consumer<List<PlayerClient>> callback) {
-		connection.invoke((Class<List<PlayerClient>>)(Class<?>)List.class, "GetPlayerClients").subscribe(callback);
-	}
-
-	public void getHostClients(Consumer<List<HostClient>> callback) {
-		connection.invoke((Class<List<HostClient>>)(Class<?>)List.class, "GetHosts").subscribe(callback);
-	}
-
-
 	public void ping(Consumer<String> callback) {
 		connection.invoke(String.class, "Ping").subscribe(callback);
 	}
 
+	public void getRemoteChannels(Consumer<Channel[]> callback) {
+		connection.invoke(Channel[].class, "GetChannels").subscribe(callback);
+	}
+
+	public void getRemotePlayerClients(Consumer<PlayerClient[]> callback) {
+		connection.invoke(PlayerClient[].class, "GetPlayerClients").subscribe(callback);
+	}
+
+	public void getRemoteHostClients(Consumer<HostClient[]> callback) {
+		connection.invoke(HostClient[].class, "GetHosts").subscribe(callback);
+	}
+
+	public List<Channel> getChannels() {
+		return this.channels;
+	}
+
+	public List<PlayerClient> getPlayerClients() {
+		return this.playerClients;
+	}
+
+	public List<HostClient> getHostClients() {
+		return this.hostClients;
+	}
+
 	public HubConnection getConnection() {
 		return connection;
-	}
-
-	public Subscription OnPlayAudio(Action5<String, String, String, Double, Boolean> action) {
-		return connection.on("PlayAudio", action, String.class, String.class, String.class, Double.class, Boolean.class);
-	}
-
-	public Subscription OnStopAudio(Action2<String, String> action) {
-		return connection.on("StopAudio", action, String.class, String.class);
-	}
-
-	public Subscription OnStopChannels(Action1<String> action) {
-		return connection.on("StopChannels", action, String.class);
-	}
-
-	public Subscription OnStopAll(Action action) {
-		return connection.on("StopAll", action);
 	}
 }

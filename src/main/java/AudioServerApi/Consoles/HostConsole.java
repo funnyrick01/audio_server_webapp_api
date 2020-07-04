@@ -7,6 +7,7 @@ import java.util.Arrays;
 
 import AudioServerApi.AudioServerApi;
 import AudioServerApi.IAudioServerApi;
+import AudioServerApi.models.Channel;
 
 public class HostConsole {
 
@@ -42,13 +43,17 @@ public class HostConsole {
 			System.out.println("channel created! " + channel);
 		});
 
-		audioServer.onRemoveChannel((name) -> {
-			System.out.println("channel removed! name: '" + name + "'");
+		audioServer.onRemoveChannel((channel) -> {
+			System.out.println("channel removed! " + channel);
 		});
 
 		System.out.println("Connected as a host! name: " + name);
 
 		while (true) {
+
+			System.out.println(audioServer.getChannels());
+			System.out.println(audioServer.getPlayerClients());
+			System.out.println(audioServer.getHostClients());
 
 			try {
 				String[] input = obj.readLine().split(" ");
@@ -59,7 +64,17 @@ public class HostConsole {
 				switch (input[0].toLowerCase()) {
 					case "?":
 					case "help":
-						System.out.println("Available commands: createchannel, removechannel, playaudio, stopaudio, stopchannel, ping");
+						System.out.println(
+								"Available commands: " +
+								"createchannel, " +
+								"removechannel, " +
+								"playaudio, " +
+								"stopaudio, " +
+								"stopchannel, " +
+								"getchannels, " +
+								"getplayers, " +
+								"gethosts" +
+								"ping");
 						break;
 					case "createchannel":
 						if (input.length < 4) {
@@ -112,7 +127,7 @@ public class HostConsole {
 							break;
 						}
 	
-						audioServer.stopChannel(Arrays.asList(input[1]), Arrays.asList(input[2]));
+						audioServer.stopChannels(Arrays.asList(input[1]), Arrays.asList(input[2]));
 						System.out.println("stopping all audio in channel...");
 						break;
 	
@@ -129,19 +144,23 @@ public class HostConsole {
 
 					case "getchannels":
 						System.out.println("getting channels...");
-						audioServer.getChannels(channels -> System.out.println(channels));
+						audioServer.getRemoteChannels(channels -> {
+							for (Channel channel : channels) {
+								System.out.println(channel);
+							}
+						});
 						break;
 
 					case "getplayers":
 					case "getplayerclients":
 						System.out.println("getting player clients...");
-						audioServer.getPlayerClients(playerClients -> System.out.println(playerClients));
+						audioServer.getRemotePlayerClients(playerClients -> System.out.println(playerClients));
 						break;
 
 					case "gethosts":
 					case "gethostclients":
 						System.out.println("getting host clients...");
-						audioServer.getHostClients(hostClients -> System.out.println(hostClients));
+						audioServer.getRemoteHostClients(hostClients -> System.out.println(hostClients));
 						break;
 
 					case "ping":

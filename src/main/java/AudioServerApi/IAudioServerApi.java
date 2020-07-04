@@ -117,7 +117,7 @@ public interface IAudioServerApi {
 	 * @param uuids A list containing the players uuids
 	 * @param channels A list containing all the channel names
 	 */
-	void stopChannel(List<String> uuids, List<String> channels);
+	void stopChannels(List<String> uuids, List<String> channels);
 	
 	/**
 	 * Stop all audio.
@@ -126,35 +126,54 @@ public interface IAudioServerApi {
 	 */
 	void stopAllAudio(List<String> uuids);
 
-	void getChannels(Consumer<List<Channel>> callback);
-
-	void getPlayerClients(Consumer<List<PlayerClient>> callback);
-
-	void getHostClients(Consumer<List<HostClient>> callback);
-	
 	/**
 	 * Ping the audiohub!
 	 *
 	 * @param callback The callback containing the response message
 	 */
 	void ping(Consumer<String> callback);
+
+	/**
+	 * Get the channels from the hub.
+	 *
+	 * @param callback The callback containing the channels
+	 */
+	void getRemoteChannels(Consumer<Channel[]> callback);
+
+	/**
+	 * Get the connected player clients from the hub.
+	 *
+	 * @param callback The callback containing the connected player clients
+	 */
+	void getRemotePlayerClients(Consumer<PlayerClient[]> callback);
+
+	/**
+	 * Get the connected host clients from the hub.
+	 *
+	 * @param callback The callback containing the connected host clients
+	 */
+	void getRemoteHostClients(Consumer<HostClient[]> callback);
+
+	/**
+	 * Get the channels.
+	 * This list is automatically synced in real time with the hub.
+	 */
+	List<Channel> getChannels();
+
+	/**
+	 * Get the connected player clients.
+	 * This list is automatically synced in real time with the hub.
+	 */
+	List<PlayerClient> getPlayerClients();
+
+	/**
+	 * Get the connected host clients.
+	 * This list is automatically synced in real time with the hub.
+	 */
+	List<HostClient> getHostClients();
 	
 	/**
 	 * Get the connection object.
 	 */
 	HubConnection getConnection();
-	
-	
-	// ######################################### //
-	// 			!!! Client methods !!!           //
-	// ######################################### //
-	
-	
-	Subscription OnPlayAudio(Action5<String, String, String, Double, Boolean> callback);
-	
-	Subscription OnStopAudio(Action2<String, String> callback);
-	
-	Subscription OnStopChannels(Action1<String> callback);
-	
-	Subscription OnStopAll(Action callback);
 }
