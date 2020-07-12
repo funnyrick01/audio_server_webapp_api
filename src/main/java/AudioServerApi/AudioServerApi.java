@@ -30,7 +30,10 @@ public class AudioServerApi implements IAudioServerApi {
 	public void createConnection(String url, String authCode, String name) {
 		connection = HubConnectionBuilder.create(url + "?authCode=" + authCode + "&name=" + name).build();
 
-		connection.start().doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("Connection successfully made to: " + url + " as " + name)).blockingAwait();
+		connection.start().doOnError(throwable -> {
+			System.out.println(throwable.getMessage());
+			throwable.printStackTrace();
+		}).doOnComplete(() -> System.out.println("Connection successfully made to: " + url + " as " + name)).blockingAwait();
 
 		getRemoteChannels(channels -> Collections.addAll(this.channels, channels));
 		getRemotePlayerClients(playerClients -> Collections.addAll(this.playerClients, playerClients));

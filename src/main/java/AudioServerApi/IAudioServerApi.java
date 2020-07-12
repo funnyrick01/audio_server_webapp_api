@@ -97,7 +97,7 @@ public interface IAudioServerApi {
 	 * @param channel The channel to play the audio on
 	 * @param name The unique name of the audio. This name is used for stopping the audio
 	 * @param fileLocation The file location url. example: "https://www.dropbox.com/s/8zmokvwmcr18dy"
-	 * @param startTime The time to start the audio on. When -1 is given, it will be synchronized with all clients.=
+	 * @param startTime The time to start the audio on. When -1 is given, it will be synchronized with all clients.
 	 * @param looping When true, it will loop the audio until stopped
 	 */
 	void playAudio(List<String> uuids, String channel, String name, String fileLocation, double startTime, boolean looping);

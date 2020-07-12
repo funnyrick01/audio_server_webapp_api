@@ -1,23 +1,41 @@
 package AudioServerApi.Consoles;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Arrays;
+import java.util.Properties;
+import java.util.Scanner;
 
 import AudioServerApi.AudioServerApi;
 import AudioServerApi.IAudioServerApi;
 import AudioServerApi.models.Channel;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 public class HostConsole {
 
+	final static Logger logger = LogManager.getLogger(HostConsole.class);
 
-	private static String url = "http://localhost:5000/audioHub";
-	private static String authCode = "2806d01cdd3c4bfc80b751e9cec02110293a30354ebb48678147b800cc95b9c4";
-	private static String name = "HostConsole" + Math.random();
+	private static String url;
+	private static String authCode;
+	private static String name;
+
+	private static Properties config;
 
 	public static void main(String[] args) throws IOException {
-		BufferedReader obj = new BufferedReader(new InputStreamReader(System.in));
+		org.apache.log4j.BasicConfigurator.configure();
+
+		try {
+			LoadConfigFile();
+		} catch (FileNotFoundException ex) {
+			CreateConfigFile();
+			LoadConfigFile();
+		}
+
+		url = config.getProperty("url");
+		authCode = config.getProperty("authCode");
+		name = config.getProperty("name");
+
+		logger.info(url);
 
 		IAudioServerApi audioServer = AudioServerApi.getInstance();
 
@@ -49,11 +67,8 @@ public class HostConsole {
 
 		System.out.println("Connected as a host! name: " + name);
 
+		BufferedReader obj = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
-
-			System.out.println(audioServer.getChannels());
-			System.out.println(audioServer.getPlayerClients());
-			System.out.println(audioServer.getHostClients());
 
 			try {
 				String[] input = obj.readLine().split(" ");
@@ -66,6 +81,7 @@ public class HostConsole {
 					case "help":
 						System.out.println(
 								"Available commands: " +
+								"info, " +
 								"createchannel, " +
 								"removechannel, " +
 								"playaudio, " +
@@ -73,8 +89,13 @@ public class HostConsole {
 								"stopchannel, " +
 								"getchannels, " +
 								"getplayers, " +
-								"gethosts" +
+								"gethosts, " +
 								"ping");
+						break;
+					case "info":
+						System.out.println(audioServer.getChannels());
+						System.out.println(audioServer.getPlayerClients());
+						System.out.println(audioServer.getHostClients());
 						break;
 					case "createchannel":
 						if (input.length < 4) {
@@ -178,4 +199,27 @@ public class HostConsole {
 		}
 	}
 
+	private static void LoadConfigFile() throws IOException {
+		File file = new File("connection.properties");
+		FileInputStream is = new FileInputStream(file);
+
+		config = new Properties();
+		config.load(is);
+	}
+
+	private static void CreateConfigFile() throws IOException {
+		File newFile = new File("connection.properties");
+		File fileTemplate = new File("src/main/resources/connection.template.properties");
+		if (newFile.createNewFile()) {
+			logger.info("No config file found, created a new one...");
+
+			FileWriter writer = new FileWriter(newFile);
+			Scanner reader = new Scanner(fileTemplate);
+			while(reader.hasNextLine()) {
+				writer.write(reader.nextLine() + "\n");
+			}
+			writer.close();
+			reader.close();
+		}
+	}
 }
