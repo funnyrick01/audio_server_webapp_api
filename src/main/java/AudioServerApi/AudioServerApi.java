@@ -121,6 +121,10 @@ public class AudioServerApi implements IAudioServerApi {
 		connection.send("StopAllAudio", uuids);
 	}
 
+	public void setImageUrl(List<String> uuids, String imageUrl) {
+		connection.send("SetImageUrl", uuids, imageUrl);
+	}
+
 	public void ping(Consumer<String> callback) {
 		connection.invoke(String.class, "Ping").subscribe(callback);
 	}

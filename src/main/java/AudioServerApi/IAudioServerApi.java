@@ -127,6 +127,14 @@ public interface IAudioServerApi {
 	void stopAllAudio(List<String> uuids);
 
 	/**
+	 * Set the background image for the audio page
+	 *
+	 * @param uuids A list containing the players uuids
+	 * @param imageUrl The full URL of the image
+	 */
+	void setImageUrl(List<String> uuids, String imageUrl);
+
+	/**
 	 * Ping the audiohub!
 	 *
 	 * @param callback The callback containing the response message

@@ -22,7 +22,7 @@ public class HostConsole {
 	private static Properties config;
 
 	public static void main(String[] args) throws IOException {
-		org.apache.log4j.BasicConfigurator.configure();
+		//org.apache.log4j.BasicConfigurator.configure();
 
 		try {
 			LoadConfigFile();
@@ -87,6 +87,7 @@ public class HostConsole {
 								"playaudio, " +
 								"stopaudio, " +
 								"stopchannel, " +
+								"setimage, " +
 								"getchannels, " +
 								"getplayers, " +
 								"gethosts, " +
@@ -187,6 +188,15 @@ public class HostConsole {
 					case "ping":
 						System.out.println("pinging...");
 						audioServer.ping(callback -> System.out.println(callback));
+						break;
+
+					case "setimage":
+						if (input.length < 2) {
+							System.out.println("Required at least 2 paramaters. uuid, url");
+							break;
+						}
+						System.out.println("setting image...");
+						audioServer.setImageUrl(Arrays.asList(input[1]), input[2]);
 						break;
 	
 					default:
